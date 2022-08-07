@@ -17,6 +17,7 @@ from DyldExtractor.dyld.dyld_constants import *
 from DyldExtractor.dyld.dyld_structs import (
 	dyld_cache_mapping_and_slide_info,
 	dyld_cache_mapping_info,
+	dyld_cache_slide_info1,
 	dyld_cache_slide_info2,
 	dyld_cache_slide_info3,
 	dyld_cache_slide_pointer3
@@ -28,6 +29,7 @@ from DyldExtractor.macho.macho_structs import (
 
 
 _SlideInfoMap = {
+	1: dyld_cache_slide_info1,
 	2: dyld_cache_slide_info2,
 	3: dyld_cache_slide_info3
 }
@@ -283,7 +285,7 @@ def _getMappingInfo(
 		slideInfoVer = dyldCtx.readFormat("<I", slideInfoOff)[0]
 
 		if slideInfoVer not in _SlideInfoMap:
-			logger.error("Unknown slide info version: " + slideInfoVer)
+			logger.error("Unknown slide info version: " + str(slideInfoVer))
 			return None
 
 		# Assume that only the second mapping has slide info

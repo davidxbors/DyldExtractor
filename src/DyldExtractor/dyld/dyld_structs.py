@@ -220,6 +220,24 @@ class dyld_cache_image_info(Structure):
 	]
 
 
+class dyld_cache_slide_info1(Structure):
+	version: int			# 1
+	toc_offset: int
+	toc_count: int
+	entries_offset: int
+	entries_count: int
+	entries_size: int		# 128
+
+	_fields_ = [
+		("version", c_uint32),
+		("toc_offset", c_uint32),
+		("toc_count", c_uint32),
+		("entries_offset", c_uint32),
+		("entries_count", c_uint32),
+		("entries_size", c_uint32),
+	]
+
+
 class dyld_cache_slide_info2(Structure):
 
 	version: int 				# currently 2

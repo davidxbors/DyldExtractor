@@ -16,8 +16,10 @@ from DyldExtractor.macho.macho_structs import (
 	LoadCommands,
 	load_command,
 	UnknownLoadCommand,
+	mach_header_32,
 	mach_header_64,
-	segment_command_64
+	segment_command_64,
+	segment_command_32
 )
 
 
@@ -54,10 +56,11 @@ class MachOContext(FileContext):
 		self.header = mach_header_64(self.file, self.fileOffset)
 		self._mappings: List[Tuple[MappingInfo, "MachOContext"]] = []
 
-		# check to make sure the MachO file is 64 bit
+		# check if MachO file is 64 or 32 bit
 		magic = self.header.magic
+		self.BITS = 64
 		if magic == 0xfeedface or magic == 0xcefaedfe:
-			raise Exception("MachOContext doesn't support 32bit files!")
+			self.BITS = 32
 
 		self._parseLoadCommands()
 		pass
@@ -118,7 +121,7 @@ class MachOContext(FileContext):
 
 		Parse the load commands and set the loadCommands attribute.
 		"""
-		self.header = mach_header_64(self.file, self.fileOffset)
+		self.header = mach_header_64(self.file, self.fileOffset) if self.BITS == 64 else mach_header_32(self.file, self.fileOffset)
 
 		self.loadCommands = []
 
@@ -140,7 +143,8 @@ class MachOContext(FileContext):
 			self.loadCommands.append(command)
 
 			# populate the segments at this point too
-			if isinstance(command, segment_command_64):
+			if self.BITS == 64 and isinstance(command, segment_command_64) \
+							or self.BITS == 32 and isinstance(command, segment_command_32):
 				segCtx = SegmentContext(self.file, command)
 
 				self.segments[command.segname] = segCtx

@@ -116,6 +116,27 @@ class mach_header_64(Structure):
 		("reserved", c_uint32),
 	]
 
+class mach_header_32(Structure):
+	SIZE = 28
+
+	magic: int 			# mach magic number identifier
+	cputype: int 		# cpu specifier
+	cpusubtype: int 	# machine specifier
+	filetype: int 		# type of file
+	ncmds: int 			# number of load commands
+	sizeofcmds: int 	# the size of all the load commands
+	flags: int 			# flags
+
+	_fields_ = [
+		("magic", c_uint32),
+		("cputype", c_uint32),
+		("cpusubtype", c_uint32),
+		("filetype", c_uint32),
+		("ncmds", c_uint32),
+		("sizeofcmds", c_uint32),
+		("flags", c_uint32),
+	]
+
 
 class load_command(Structure):
 	cmd: int 		# type of load command
@@ -162,13 +183,43 @@ class segment_command_64(Structure):
 		("vmaddr", c_uint64),
 		("vmsize", c_uint64),
 		("fileoff", c_uint64),
-		("filesize", c_uint64),
+ 		("filesize", c_uint64),
 		("maxprot", c_int32),
 		("initprot", c_int32),
 		("nsects", c_uint32),
 		("flags", c_uint32),
 	]
 
+
+class segment_command_32(Structure):
+        # for 32-bit architectures
+
+        SIZE = 52
+
+        cmd: int
+        cmdsize: int
+        segname: bytes
+        vmaddr: int
+        vmsize: int
+        fileoff: int
+        filesize: int
+        maxprot: int
+        initprot: int
+        nsects: int
+        flags: int
+
+        _fields_ = [
+                ("cmd", c_uint32),
+                ("cmdsize", c_uint32),
+                ("segname", c_char * 16),
+                ("vmaddr", c_uint32),
+                ("vmsize", c_uint32),
+                ("fileoff", c_uint32),
+                ("maxprot", c_uint32),
+                ("initprot", c_uint32),
+                ("nsects", c_uint32),
+                ("flags", c_uint32),
+                ]
 
 class section_64(Structure):
 	# for 64-bit architectures
@@ -193,6 +244,39 @@ class section_64(Structure):
 		("segname", c_char * 16),
 		("addr", c_uint64),
 		("size", c_uint64),
+		("offset", c_uint32),
+		("align", c_uint32),
+		("reloff", c_uint32),
+		("nreloc", c_uint32),
+		("flags", c_uint32),
+		("reserved1", c_uint32),
+		("reserved2", c_uint32),
+		("reserved3", c_uint32),
+	]
+
+class section_32(Structure):
+	# for 32-bit architectures
+
+	SIZE = 72
+
+	sectname: bytes 	# name of this section
+	segname: bytes 		# segment this section goes in
+	addr: int 			# memory address of this section
+	size: int 			# size in bytes of this section
+	offset: int 		# file offset of this section
+	align: int 			# section alignment (power of 2)
+	reloff: int 		# file offset of relocation entries
+	nreloc: int 		# number of relocation entries
+	flags: int 			# flags (section type and attributes
+	reserved1: int 		# reserved (for offset or index)
+	reserved2: int 		# reserved (for count or sizeof)
+	reserved3: int 		# reserve
+
+	_fields_ = [
+		("sectname", c_char * 16),
+		("segname", c_char * 16),
+		("addr", c_uint32),
+		("size", c_uint32),
 		("offset", c_uint32),
 		("align", c_uint32),
 		("reloff", c_uint32),
@@ -381,6 +465,34 @@ class routines_command_64(Structure):
 		("reserved6", c_uint64),
 	]
 
+class routines_command_32(Structure):
+	# for 32-bit architectures
+
+	cmd: int 			# LC_ROUTINES_32
+	cmdsize: int 		# total size of this command
+	init_address: int 	# address of initialization routine
+	init_module: int 	# index into the module table that
+						# 	the init routine is defined in
+	reserved1: int
+	reserved2: int
+	reserved3: int
+	reserved4: int
+	reserved5: int
+	reserved6: int
+
+	_fields_ = [
+		("cmd", c_uint32),
+		("cmdsize", c_uint32),
+		("init_address", c_uint32),
+		("init_module", c_uint32),
+		("reserved1", c_uint32),
+		("reserved2", c_uint32),
+		("reserved3", c_uint32),
+		("reserved4", c_uint32),
+		("reserved5", c_uint32),
+		("reserved6", c_uint32),
+	]
+
 
 class symtab_command(Structure):
 	cmd: int 		# LC_SYMTAB
@@ -425,6 +537,24 @@ class nlist_64(Structure):
 		("n_sect", c_uint8),
 		("n_desc", c_uint16),
 		("n_value", c_uint64),
+	]
+
+class nlist_32(Structure):
+
+	SIZE: int = 8
+
+	n_un: N_un
+	n_type: int 	# type flag, see below
+	n_sect: int 	# section number or NO_SECT
+	n_desc: int 	# see <mach-o/stab.h>
+	n_value: int 	# value of this symbol (or stab offset)
+
+	_fields_ = [
+		("n_un", N_un),
+		("n_type", c_uint8),
+		("n_sect", c_uint8),
+		("n_desc", c_uint16),
+		("n_value", c_uint32),
 	]
 
 
@@ -575,6 +705,21 @@ class encryption_info_command_64(Structure):
 		("pad", c_uint32),
 	]
 
+class encryption_info_command_32(Structure):
+	cmd: int 		# LC_ENCRYPTION_INFO_64
+	cmdsize: int 	# sizeof(struct encryption_info_command_64)
+	cryptoff: int 	# file offset of encrypted range
+	cryptsize: int 	# file size of encrypted range
+	cryptid: int 	# which encryption system,
+					# 	0 means not-encrypted yet
+
+	_fields_ = [
+		("cmd", c_uint32),
+		("cmdsize", c_uint32),
+		("cryptoff", c_uint32),
+		("cryptsize", c_uint32),
+		("cryptid", c_uint32),
+	]
 
 class version_min_command(Structure):
 	cmd: int 		# LC_VERSION_MIN_MACOSX or
@@ -729,7 +874,7 @@ class source_version_command(Structure):
 LoadCommandMap = {
 	# Provides a mapping between a load command and its structure.
 
-	# LoadCommands.LC_SEGMENT: None,
+	LoadCommands.LC_SEGMENT: segment_command_32,
 	LoadCommands.LC_SYMTAB: symtab_command,
 	LoadCommands.LC_SYMSEG: symseg_command,
 	LoadCommands.LC_THREAD: thread_command,
@@ -745,7 +890,7 @@ LoadCommandMap = {
 	LoadCommands.LC_LOAD_DYLINKER: dylinker_command,
 	LoadCommands.LC_ID_DYLINKER: dylinker_command,
 	LoadCommands.LC_PREBOUND_DYLIB: prebound_dylib_command,
-	# LoadCommands.LC_ROUTINES: None,
+	LoadCommands.LC_ROUTINES: routines_command_32,
 	LoadCommands.LC_SUB_FRAMEWORK: sub_framework_command,
 	LoadCommands.LC_SUB_UMBRELLA: sub_umbrella_command,
 	LoadCommands.LC_SUB_CLIENT: sub_client_command,
@@ -761,7 +906,7 @@ LoadCommandMap = {
 	LoadCommands.LC_SEGMENT_SPLIT_INFO: linkedit_data_command,
 	LoadCommands.LC_REEXPORT_DYLIB: dylib_command,
 	LoadCommands.LC_LAZY_LOAD_DYLIB: dylib_command,
-	# LoadCommands.LC_ENCRYPTION_INFO: None,
+	LoadCommands.LC_ENCRYPTION_INFO: encryption_info_command_32,
 	LoadCommands.LC_DYLD_INFO: dyld_info_command,
 	LoadCommands.LC_DYLD_INFO_ONLY: dyld_info_command,
 	LoadCommands.LC_LOAD_UPWARD_DYLIB: dylib_command,
